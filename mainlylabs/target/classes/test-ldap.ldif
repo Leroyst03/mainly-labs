@@ -1,0 +1,38 @@
+dn: dc=example,dc=org
+objectclass: top
+objectclass: domain
+dc: example
+
+dn: ou=people,dc=example,dc=org
+objectclass: organizationalUnit
+ou: people
+
+dn: ou=groups,dc=example,dc=org
+objectclass: organizationalUnit
+ou: groups
+
+dn: uid=admin,ou=people,dc=example,dc=org
+objectclass: inetOrgPerson
+cn: Admin User
+sn: User
+uid: admin
+mail: admin@example.org
+userPassword: {noop}admin123
+
+dn: uid=juan,ou=people,dc=example,dc=org
+objectclass: inetOrgPerson
+cn: Juan Pérez
+sn: Pérez
+uid: juan
+mail: juan@example.org
+userPassword: {noop}juan123
+
+dn: cn=admins,ou=groups,dc=example,dc=org
+objectclass: groupOfUniqueNames
+cn: admins
+uniqueMember: uid=admin,ou=people,dc=example,dc=org
+
+dn: cn=users,ou=groups,dc=example,dc=org
+objectclass: groupOfUniqueNames
+cn: users
+uniqueMember: uid=juan,ou=people,dc=example,dc=org
