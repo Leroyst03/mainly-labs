@@ -39,46 +39,42 @@ public class LoginController {
             }
 
             // Verificar si la IP está temporalmente bloqueada
-            if(ipBanService.isIpBanned(ip)) {
+            if (ipBanService.isIpBanned(ip)) {
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                         .body("Demasiados intentos fallidos. Intente nuevamente en una hora.");
             }
 
             // Obtener o inicializar información de intentos
             AttemptInfo info = attemptService.getAttempts(ip);
-            int currentAttempts = info.getNumberAttempt();
-            LocalDateTime lastAttempt = info.getLastAttempt();
+            LocalDateTime lastAttempt = info.lastAttempt();
 
-            if(attemptService.checkTime(lastAttempt)) {
-                currentAttempts = 0;
+            if (attemptService.checkTime(lastAttempt)) {
+                attemptService.deleteAttempts(ip);
             }
 
-            // Verificar si aún tiene intentos disponibles
-
+            // Intentar login
             String answer = userService.logUser(userInfo.getEmail(), userInfo.getPassword());
 
             if (answer == null) {
-                int newAttempt = currentAttempts + 1;
-                lastAttempt = LocalDateTime.now();
-                AttemptInfo attemptInfo = new AttemptInfo(newAttempt, lastAttempt);
+                AttemptInfo attemptInfo = attemptService.incrementAttempts(ip);
+                int newAttempt = attemptInfo.numberAttempt();
 
                 if (newAttempt >= 3) {
-                    ipBanService.banIp(ip, lastAttempt);
+                    ipBanService.banIp(ip, attemptInfo.lastAttempt());
                     attemptService.deleteAttempts(ip);
 
                     return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                             .body("Demasiados intentos fallidos. Intente nuevamente en una hora.");
-                    }
-                    else {
-                        attemptService.setAttempts(ip, attemptInfo);
-                        return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                } else {
+                    return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                             .body("Contraseña incorrecta. Quedan " + (3 - newAttempt) + " intentos.");
-                    }
+                }
             }
 
             // Login exitoso
             attemptService.deleteAttempts(ip);
             return ResponseEntity.status(HttpStatus.ACCEPTED).body(answer);
+
         } catch (HttpException err) {
             return ResponseEntity.status(err.getStatus()).body(err.getMessage());
         }

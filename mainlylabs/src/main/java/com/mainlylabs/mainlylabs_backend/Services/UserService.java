@@ -188,7 +188,4 @@ public class UserService {
             throw new HttpException(HttpStatus.INTERNAL_SERVER_ERROR, "Error al iniciar sesión: " + e.getMessage());
         }
     }
-
-
-
 }

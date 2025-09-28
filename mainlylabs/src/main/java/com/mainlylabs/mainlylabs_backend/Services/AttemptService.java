@@ -16,19 +16,22 @@ public class AttemptService {
     }
 
     public AttemptInfo getAttempts(String ip) {
-       return ipControl.computeIfAbsent(ip, k -> new AttemptInfo(0, LocalDateTime.now()));
+        return ipControl.computeIfAbsent(ip, k -> new AttemptInfo(0, LocalDateTime.now()));
     }
 
-    public void setAttempts(String ip, AttemptInfo attemptInfo) {
-        ipControl.put(ip, attemptInfo);
+    // Incremento atómico: devuelve el nuevo AttemptInfo
+    public AttemptInfo incrementAttempts(String ip) {
+        return ipControl.compute(ip, (key, oldInfo) -> {
+            if (oldInfo == null) {
+                return new AttemptInfo(1, LocalDateTime.now());
+            }
+            return new AttemptInfo(oldInfo.numberAttempt() + 1, LocalDateTime.now());
+        });
     }
 
     public boolean checkTime(LocalDateTime time) {
-        LocalDateTime acutalTime = LocalDateTime.now();
-
-        Duration difference =   Duration.between(time, acutalTime);
-
+        LocalDateTime actualTime = LocalDateTime.now();
+        Duration difference = Duration.between(time, actualTime);
         return difference.toHours() > 1;
     }
-
 }
